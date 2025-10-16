@@ -97,6 +97,20 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['change_password'])) {
         }
     }
 }
+// Handle hapus akun
+if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['delete_account'])) {
+    // Hapus data dari database
+    $delete_detail_query = "DELETE FROM detail_akun WHERE id_login = '$id_login'";
+    $delete_login_query = "DELETE FROM akun_login WHERE id_login = '$id_login'";
+    
+    if (mysqli_query($conn, $delete_detail_query) && mysqli_query($conn, $delete_login_query)) {
+        session_destroy();
+        header("Location: login.php");
+        exit;
+    } else {
+        $error_message = "Gagal menghapus akun: " . mysqli_error($conn);
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="id" class="scroll-smooth">
@@ -302,6 +316,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['change_password'])) {
                                     Ganti Password
                                 </button>
                             </div>
+                            <!-- Tombol Hapus Akun -->
+                            <div class="mt-4 text-center">
+                                <button type="button" onclick="showDeleteConfirmation()"
+                                    class="w-[190px] mx-auto px-4 py-2 rounded-md bg-red-600 hover:bg-red-700 text-white text-sm font-semibold transition">
+                                    Hapus Akun
+                                </button>
+                                <p class="text-xs text-gray-500 text-center mt-2">Tindakan ini tidak dapat dibatalkan</p>
+                            </div>
                         </div>
 
                         <!-- Detail Biodata -->
@@ -371,7 +393,23 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['change_password'])) {
             </div> <!-- /card putih -->
         </main>
     </div> <!-- /grid -->
-
+    <!-- Modal Konfirmasi Hapus Akun -->
+    <div id="deleteConfirmation" class="hidden fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+        <div class="bg-white p-6 rounded-lg shadow-xl text-center w-full max-w-md">
+            <h3 class="text-lg font-semibold text-gray-700 mb-4">Apakah Anda yakin ingin menghapus akun?</h3>
+            <p class="text-sm text-gray-600 mb-4">Semua data Anda akan dihapus permanen dan tidak dapat dikembalikan!</p>
+            <div class="flex gap-4 justify-center">
+                <form method="POST" action="" class="inline">
+                    <input type="hidden" name="delete_account" value="1">
+                    <button type="submit" class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition">
+                        Ya, Hapus Akun
+                    </button>
+                </form>
+                <button class="bg-gray-300 text-gray-800 px-4 py-2 rounded hover:bg-gray-400 transition"
+                    onclick="hideDeleteConfirmation()">Batal</button>
+            </div>
+        </div>
+    </div>
     <!-- Modal Ganti Password -->
     <div id="passwordModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
         <div class="bg-white p-6 rounded-lg shadow-xl w-full max-w-md">
@@ -432,6 +470,28 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['change_password'])) {
     </div>
 
     <script>
+        // Fungsi untuk menampilkan konfirmasi penghapusan akun
+        function showDeleteConfirmation() {
+            document.getElementById("deleteConfirmation").classList.remove("hidden");
+        }
+
+        // Fungsi untuk menyembunyikan konfirmasi penghapusan akun
+        function hideDeleteConfirmation() {
+            document.getElementById("deleteConfirmation").classList.add("hidden");
+        }
+
+        // Tambahkan juga di event listener untuk close modal ketika klik di luar
+        document.addEventListener('click', function(event) {
+            const passwordModal = document.getElementById('passwordModal');
+            const deleteModal = document.getElementById('deleteConfirmation');
+            
+            if (event.target === passwordModal) {
+                hidePasswordModal();
+            }
+            if (event.target === deleteModal) {
+                hideDeleteConfirmation();
+            }
+        });
         function previewImage(event) {
             const [file] = event.target.files || [];
             if (!file) return;
